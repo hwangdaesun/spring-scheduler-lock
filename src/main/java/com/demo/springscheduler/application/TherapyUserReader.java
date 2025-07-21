@@ -15,4 +15,9 @@ public class TherapyUserReader {
     public TherapyUser read(String email){
         return therapyUserRepository.findByEmail(email);
     }
+
+    @Transactional(readOnly = true)
+    public TherapyUser read(Long id) {
+        return therapyUserRepository.findById(id).orElseThrow(RuntimeException::new);
+    }
 }

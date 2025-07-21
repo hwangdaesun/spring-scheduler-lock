@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -43,22 +42,25 @@ public class TherapyPerform extends BaseEntity {
      */
 
     @Column(name = "SOME_DATA_1")
-    private Float someData1;
+    private Double someData1;
 
     @Column(name = "SOME_DATA_2")
-    private Float someData2;
+    private Double someData2;
 
 
     @Builder(access = AccessLevel.PRIVATE)
-    private TherapyPerform(TherapyItem therapyItem, TherapyUser therapyUser, LocalDateTime performDateTime, Float someData1,
-                          Float someData2) {
+    private TherapyPerform(TherapyItem therapyItem, TherapyUser therapyUser, LocalDateTime performDateTime,
+                           Double someData1,
+                           Double someData2) {
         this.therapyItem = therapyItem;
         this.therapyUser = therapyUser;
         this.performDateTime = performDateTime;
         this.someData1 = someData1;
         this.someData2 = someData2;
     }
-    public static TherapyPerform perform(TherapyUser therapyUser, TherapyItem therapyItem, Float someData1, Float someData2){
+
+    public static TherapyPerform perform(TherapyUser therapyUser, TherapyItem therapyItem, Double someData1,
+                                         Double someData2) {
         return TherapyPerform.builder()
                 .therapyUser(therapyUser)
                 .therapyItem(therapyItem)
