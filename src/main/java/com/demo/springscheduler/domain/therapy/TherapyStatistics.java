@@ -52,4 +52,8 @@ public class TherapyStatistics extends BaseEntity {
                 .build();
     }
 
+    public void update(Double metric) {
+        this.metric = metric;
+    }
+
 }

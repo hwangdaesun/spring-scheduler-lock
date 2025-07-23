@@ -1,7 +1,10 @@
 package com.demo.springscheduler.infra.scheduler;
 
 import com.demo.springscheduler.application.TherapyUserUseCase;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +24,16 @@ public class TherapyStatisticsScheduler {
     public void aggregateDaily() {
 
         List<Long> targetTherapyUserIds = therapyUserUseCase.findTargetTherapyUsers();
-        // 특정 기간 설정
-        LocalDateTime startDateTime = LocalDateTime.now().minusDays(4);
-        LocalDateTime endDateTime = LocalDateTime.now().minusDays(5);
+
+        // 특정 기간 설정 (오늘 ~ 달의 마지막 날)
+
+        // 오늘
+        LocalDateTime startDateTime = LocalDateTime.now();
+
+        // 이번 달의 마지막 날
+        YearMonth currentMonth = YearMonth.from(startDateTime);
+        LocalDate lastDayOfMonth = currentMonth.atEndOfMonth();
+        LocalDateTime endDateTime = lastDayOfMonth.atTime(LocalTime.MAX);
 
         for (Long therapyUserId : targetTherapyUserIds) {
             log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
