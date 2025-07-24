@@ -28,8 +28,8 @@ public class TherapyStatisticsService {
         YearMonth yearMonth = YearMonth.from(startDateTime);
         TherapyUser targetUser = therapyUserReader.read(therapyUserId);
 
-        Optional<TherapyStatistics> optionalTherapyStatistics = therapyStatisticsRepository.findByTherapyUserIdAndPeriod(
-                targetUser.getId(), 1);
+        Optional<TherapyStatistics> optionalTherapyStatistics = therapyStatisticsRepository.findByTherapyUserIdAndYearAndMonth(
+                targetUser.getId(), yearMonth.getYear(), yearMonth.getMonthValue());
         boolean existing = optionalTherapyStatistics.isPresent();
 
         // 불필요한 중복 계산 방지

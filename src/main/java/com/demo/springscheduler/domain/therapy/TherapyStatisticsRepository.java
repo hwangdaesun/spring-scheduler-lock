@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TherapyStatisticsRepository extends JpaRepository<TherapyStatistics, Long> {
 
-    Optional<TherapyStatistics> findByTherapyUserIdAndPeriod(Long therapyUserId, Integer period);
+    Optional<TherapyStatistics> findByTherapyUserIdAndYearAndMonth(Long therapyUserId, Integer year, Integer month);
 }
