@@ -6,6 +6,7 @@ import com.demo.springscheduler.DatabaseClearExtension;
 import com.demo.springscheduler.SetupMockData;
 import com.demo.springscheduler.application.TherapyPerformReader;
 import com.demo.springscheduler.application.TherapyStatisticsReader;
+import com.demo.springscheduler.application.TherapyStatisticsUseCase;
 import com.demo.springscheduler.application.TherapyUserReader;
 import com.demo.springscheduler.domain.therapy.TherapyCalculator;
 import com.demo.springscheduler.domain.user.TherapyUser;
@@ -30,14 +31,14 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 @SpringBootTest
 @ExtendWith(DatabaseClearExtension.class)
 @AutoConfigureTestDatabase(replace = Replace.NONE)
-class TherapyStatisticsServiceTest {
+class TherapyStatisticsUseCaseTest {
 
     @Autowired
     PlatformTransactionManager transactionManager;
     @Autowired
     private SetupMockData setupMockData;
     @Autowired
-    private TherapyStatisticsService therapyStatisticsService;
+    private TherapyStatisticsUseCase therapyStatisticsUsecase;
     @Autowired
     private TherapyUserReader therapyUserReader;
     @Autowired
@@ -70,7 +71,7 @@ class TherapyStatisticsServiceTest {
             executor.submit(() -> {
                 TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
                 try {
-                    therapyStatisticsService.aggregateTherapyStatics(therapyUser.getId(), start, end);
+                    therapyStatisticsUsecase.aggregateTherapyStatics(therapyUser.getId(), start, end);
                     transactionManager.commit(status);
                 } catch (DataIntegrityViolationException e) {
                     exceptionCount.incrementAndGet();
@@ -106,7 +107,7 @@ class TherapyStatisticsServiceTest {
                 namedLockRepository.acquireLock("batch-lock");
                 TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
                 try {
-                    therapyStatisticsService.aggregateTherapyStatics(therapyUser.getId(), start, end);
+                    therapyStatisticsUsecase.aggregateTherapyStatics(therapyUser.getId(), start, end);
                     transactionManager.commit(status);
                 } catch (DataIntegrityViolationException e) {
                     exceptionCount.incrementAndGet();

@@ -1,5 +1,6 @@
 package com.demo.springscheduler.infra.scheduler;
 
+import com.demo.springscheduler.application.TherapyStatisticsUseCase;
 import com.demo.springscheduler.application.TherapyUserUseCase;
 import com.demo.springscheduler.infra.scheduler.lock.NamedLockRepository;
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TherapyStatisticsScheduler {
 
-    private final TherapyStatisticsService statsService;
+    private final TherapyStatisticsUseCase statsUseCase;
     private final TherapyUserUseCase therapyUserUseCase;
     private final NamedLockRepository namedLockRepository;
 
@@ -41,7 +42,7 @@ public class TherapyStatisticsScheduler {
             log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
             namedLockRepository.acquireLock("batch-lock");
             try {
-                statsService.aggregateTherapyStatics(therapyUserId, startDateTime, endDateTime);
+                statsUseCase.aggregateTherapyStatics(therapyUserId, startDateTime, endDateTime);
                 log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
             } catch (Exception e) {
                 log.error("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);

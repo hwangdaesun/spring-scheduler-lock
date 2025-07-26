@@ -1,7 +1,5 @@
-package com.demo.springscheduler.infra.scheduler;
+package com.demo.springscheduler.application;
 
-import com.demo.springscheduler.application.TherapyPerformReader;
-import com.demo.springscheduler.application.TherapyUserReader;
 import com.demo.springscheduler.domain.therapy.TherapyCalculator;
 import com.demo.springscheduler.domain.therapy.TherapyPerform;
 import com.demo.springscheduler.domain.therapy.TherapyStatistics;
@@ -17,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class TherapyStatisticsService {
+public class TherapyStatisticsUseCase {
     private final TherapyStatisticsRepository therapyStatisticsRepository;
     private final TherapyPerformReader therapyPerformReader;
     private final TherapyUserReader therapyUserReader;
