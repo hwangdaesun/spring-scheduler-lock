@@ -1,6 +1,7 @@
 package com.demo.springscheduler.infra.scheduler;
 
 import com.demo.springscheduler.application.TherapyUserUseCase;
+import com.demo.springscheduler.infra.scheduler.lock.NamedLockRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -18,6 +19,7 @@ public class TherapyStatisticsScheduler {
 
     private final TherapyStatisticsService statsService;
     private final TherapyUserUseCase therapyUserUseCase;
+    private final NamedLockRepository namedLockRepository;
 
     // 매일 자정에 실행
     @Scheduled(cron = "0 0 0 * * *")
@@ -37,12 +39,14 @@ public class TherapyStatisticsScheduler {
 
         for (Long therapyUserId : targetTherapyUserIds) {
             log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
-
+            namedLockRepository.acquireLock("batch-lock");
             try {
                 statsService.aggregateTherapyStatics(therapyUserId, startDateTime, endDateTime);
                 log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
             } catch (Exception e) {
                 log.error("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);
+            }finally {
+                namedLockRepository.releaseLock("batch-lock");
             }
         }
 
