@@ -22,8 +22,7 @@ public class TherapyStatisticsUseCase {
     private final TherapyCalculator therapyCalculator;
 
     @Transactional
-    public void aggregateTherapyStatics(Long therapyUserId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        YearMonth yearMonth = YearMonth.from(startDateTime);
+    public void aggregateTherapyStatics(Long therapyUserId, YearMonth yearMonth ,LocalDateTime startDateTime, LocalDateTime endDateTime) {
         TherapyUser targetUser = therapyUserReader.read(therapyUserId);
 
         Optional<TherapyStatistics> optionalTherapyStatistics = therapyStatisticsRepository.findByTherapyUserIdAndYearAndMonth(

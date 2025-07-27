@@ -12,6 +12,7 @@ import com.demo.springscheduler.domain.therapy.TherapyCalculator;
 import com.demo.springscheduler.domain.user.TherapyUser;
 import com.demo.springscheduler.infra.scheduler.lock.NamedLockRepository;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,13 +68,14 @@ class TherapyStatisticsUseCaseTest {
         CountDownLatch latch = new CountDownLatch(threadCount);
         AtomicInteger exceptionCount = new AtomicInteger(0);
 
-        for (int i = 0; i < threadCount; i++) {
+        for(int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
                 try {
-                    therapyStatisticsUsecase.aggregateTherapyStatics(therapyUser.getId(), start, end);
+                    therapyStatisticsUsecase.aggregateTherapyStatics(
+                            therapyUser.getId(), YearMonth.from(start), start, end);
                     transactionManager.commit(status);
-                } catch (DataIntegrityViolationException e) {
+                } catch(DataIntegrityViolationException e) {
                     exceptionCount.incrementAndGet();
                     transactionManager.rollback(status);
                 } finally {
@@ -102,14 +104,15 @@ class TherapyStatisticsUseCaseTest {
         CountDownLatch latch = new CountDownLatch(threadCount);
         AtomicInteger exceptionCount = new AtomicInteger(0);
 
-        for (int i = 0; i < threadCount; i++) {
+        for(int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 namedLockRepository.acquireLock("batch-lock");
                 TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
                 try {
-                    therapyStatisticsUsecase.aggregateTherapyStatics(therapyUser.getId(), start, end);
+                    therapyStatisticsUsecase.aggregateTherapyStatics(
+                            therapyUser.getId(), YearMonth.from(start), start, end);
                     transactionManager.commit(status);
-                } catch (DataIntegrityViolationException e) {
+                } catch(DataIntegrityViolationException e) {
                     exceptionCount.incrementAndGet();
                     transactionManager.rollback(status);
                 } finally {
