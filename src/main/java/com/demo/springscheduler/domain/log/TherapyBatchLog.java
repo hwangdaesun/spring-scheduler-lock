@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -61,5 +62,26 @@ public class TherapyBatchLog {
         this.errorMessage = errorMessage;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public static List<TherapyBatchLog> markProgress(
+            List<Long> therapyUserIds, Integer year, Integer month, LocalDateTime startTime, LocalDateTime endTime) {
+        return therapyUserIds.stream()
+                .map(therapyUserId -> TherapyBatchLog.builder().therapyUserId(therapyUserId).year(year).month(month)
+                        .startTime(startTime).endTime(endTime).status(Status.IN_PROGRESS).createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now()).build()).toList();
+    }
+
+    public void markSuccess(LocalDateTime endTime) {
+        this.status = Status.SUCCESS;
+        this.endTime = endTime;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void markFail(LocalDateTime endTime, String errorMessage) {
+        this.status = Status.FAIL;
+        this.endTime = endTime;
+        this.errorMessage = errorMessage;
+        this.updatedAt = LocalDateTime.now();
     }
 }
