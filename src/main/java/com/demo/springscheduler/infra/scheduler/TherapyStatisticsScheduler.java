@@ -1,7 +1,9 @@
 package com.demo.springscheduler.infra.scheduler;
 
+import com.demo.springscheduler.application.TherapyBatchLogUseCase;
 import com.demo.springscheduler.application.TherapyStatisticsUseCase;
 import com.demo.springscheduler.application.TherapyUserUseCase;
+import com.demo.springscheduler.domain.log.TherapyBatchLog;
 import com.demo.springscheduler.infra.scheduler.lock.NamedLockRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ public class TherapyStatisticsScheduler {
     private final TherapyStatisticsUseCase statsUseCase;
     private final TherapyUserUseCase therapyUserUseCase;
     private final NamedLockRepository namedLockRepository;
+    private final TherapyBatchLogUseCase therapyBatchLogUseCase;
 
     // 매일 자정에 실행
     @Scheduled(cron = "0 0 0 * * *")
@@ -37,16 +40,24 @@ public class TherapyStatisticsScheduler {
         YearMonth currentMonth = YearMonth.from(startDateTime);
         LocalDate lastDayOfMonth = currentMonth.atEndOfMonth();
         LocalDateTime endDateTime = lastDayOfMonth.atTime(LocalTime.MAX);
+        YearMonth yearMonth = YearMonth.from(startDateTime);
 
-        for (Long therapyUserId : targetTherapyUserIds) {
+        List<TherapyBatchLog> therapyBatchLogs = TherapyBatchLog.markProgress(
+                targetTherapyUserIds, yearMonth.getYear(), yearMonth.getMonthValue(), startDateTime, endDateTime);
+        therapyBatchLogUseCase.batchInsert(therapyBatchLogs);
+
+        for(Long therapyUserId : targetTherapyUserIds) {
             log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
             namedLockRepository.acquireLock("batch-lock");
             try {
-                statsUseCase.aggregateTherapyStatics(therapyUserId, startDateTime, endDateTime);
+                statsUseCase.aggregateTherapyStatics(
+                        therapyUserId, yearMonth, startDateTime, endDateTime);
+                therapyBatchLogUseCase.markSuccess(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue());
                 log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
-            } catch (Exception e) {
+            } catch(Exception e) {
                 log.error("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);
-            }finally {
+                therapyBatchLogUseCase.markFail(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue(), e.getMessage());
+            } finally {
                 namedLockRepository.releaseLock("batch-lock");
             }
         }

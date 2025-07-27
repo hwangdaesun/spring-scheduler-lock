@@ -1,0 +1,37 @@
+package com.demo.springscheduler.application;
+
+import com.demo.springscheduler.domain.log.TherapyBatchLog;
+import com.demo.springscheduler.domain.log.TherapyBatchLogJdbcRepository;
+import com.demo.springscheduler.domain.log.TherapyBatchLogRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class TherapyBatchLogUseCase {
+
+    private final TherapyBatchLogRepository therapyBatchLogRepository;
+    private final TherapyBatchLogJdbcRepository therapyBatchLogJdbcRepository;
+
+    @Transactional
+    public void batchInsert(List<TherapyBatchLog> therapyBatchLogs) {
+        therapyBatchLogJdbcRepository.batchInsert(therapyBatchLogs, 100);
+    }
+
+    @Transactional
+    public void markSuccess(Long therapyUserId, Integer year, Integer month) {
+        TherapyBatchLog therapyBatchLog = therapyBatchLogRepository.findTherapyBatchLogByTherapyUserIdAndYearAndMonth(
+                therapyUserId, year, month).orElseThrow(RuntimeException::new);
+        therapyBatchLog.markSuccess(LocalDateTime.now());
+    }
+
+    @Transactional
+    public void markFail(Long therapyUserId, Integer year, Integer month, String errorMessage) {
+        TherapyBatchLog therapyBatchLog = therapyBatchLogRepository.findTherapyBatchLogByTherapyUserIdAndYearAndMonth(
+                therapyUserId, year, month).orElseThrow(RuntimeException::new);
+        therapyBatchLog.markFail(LocalDateTime.now(), errorMessage);
+    }
+}
