@@ -20,9 +20,11 @@ public class TherapyStatisticsUseCase {
     private final TherapyPerformReader therapyPerformReader;
     private final TherapyUserReader therapyUserReader;
     private final TherapyCalculator therapyCalculator;
+    private final TherapyBatchLogUseCase therapyBatchLogUseCase;
 
     @Transactional
-    public void aggregateTherapyStatics(Long therapyUserId, YearMonth yearMonth ,LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    public void aggregateTherapyStatics(Long therapyUserId, YearMonth yearMonth, LocalDateTime startDateTime,
+                                        LocalDateTime endDateTime) {
         TherapyUser targetUser = therapyUserReader.read(therapyUserId);
 
         Optional<TherapyStatistics> optionalTherapyStatistics = therapyStatisticsRepository.findByTherapyUserIdAndYearAndMonth(
@@ -45,5 +47,20 @@ public class TherapyStatisticsUseCase {
             therapyStatisticsRepository.save(
                     TherapyStatistics.create(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue(), metrics));
         }
+    }
+
+    @Transactional
+    public void recoverTherapyStatistics(Long therapyUserId, YearMonth yearMonth, LocalDateTime startDateTime,
+                                         LocalDateTime endDateTime) {
+        TherapyUser targetUser = therapyUserReader.read(therapyUserId);
+
+        TherapyStatistics therapyStatistics = therapyStatisticsRepository.findByTherapyUserIdAndYearAndMonth(
+                targetUser.getId(), yearMonth.getYear(), yearMonth.getMonthValue()).orElseThrow(RuntimeException::new);
+
+        List<TherapyPerform> therapyPerforms = therapyPerformReader.read(targetUser, startDateTime, endDateTime);
+        Double metrics = therapyCalculator.calculate(therapyPerforms);
+
+        therapyStatistics.update(metrics);
+        therapyBatchLogUseCase.markSuccess(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue());
     }
 }
