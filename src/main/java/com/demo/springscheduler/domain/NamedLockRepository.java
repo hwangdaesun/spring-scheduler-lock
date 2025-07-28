@@ -1,4 +1,4 @@
-package com.demo.springscheduler.infra.scheduler.lock;
+package com.demo.springscheduler.domain;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
