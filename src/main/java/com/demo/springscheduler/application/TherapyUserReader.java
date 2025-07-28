@@ -26,4 +26,9 @@ public class TherapyUserReader {
     public List<TherapyUser> readAll(List<String> emails) {
         return therapyUserRepository.findAllByEmailIn(emails);
     }
+
+    @Transactional(readOnly = true)
+    public List<TherapyUser> readAll() {
+        return therapyUserRepository.findAll();
+    }
 }

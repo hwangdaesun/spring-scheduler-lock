@@ -26,9 +26,8 @@ public class TherapyUserUseCase {
 
     @Transactional(readOnly = true)
     public List<Long> findTargetTherapyUsers() {
-        // 특정 조건 임의 부여
-        List<String> emails = List.of("user1@example.com", "user4@example.com");
-        return therapyUserReader.readAll(emails).stream().map(therapyUser -> therapyUser.getId()).toList();
+        // 특정 조건이 있다고 가정.
+        return therapyUserReader.readAll().stream().map(therapyUser -> therapyUser.getId()).toList();
     }
 
     @Transactional
