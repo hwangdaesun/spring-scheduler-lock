@@ -17,6 +17,7 @@ public class NamedLockRepository {
     }
 
     public void releaseLock(String lockName) {
-        jdbcTemplate.update("SELECT RELEASE_LOCK(?)", lockName);
+        String sql = "SELECT RELEASE_LOCK(?)";
+        jdbcTemplate.queryForObject(sql, Boolean.class, lockName);
     }
 }
