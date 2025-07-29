@@ -47,16 +47,17 @@ public class TherapyStatisticsScheduler {
         therapyBatchLogUseCase.batchInsert(therapyBatchLogs);
 
         for(Long therapyUserId : targetTherapyUserIds) {
-            log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
+            log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
             namedLockRepository.acquireLock("batch-lock");
             try {
                 statsUseCase.aggregateTherapyStatics(
                         therapyUserId, yearMonth, startDateTime, endDateTime);
                 therapyBatchLogUseCase.markSuccess(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue());
-                log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
+                log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
             } catch(Exception e) {
-                log.error("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);
-                therapyBatchLogUseCase.markFail(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue(), e.getMessage());
+                log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);
+                therapyBatchLogUseCase.markFail(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue(),
+                        e.getMessage());
             } finally {
                 namedLockRepository.releaseLock("batch-lock");
             }

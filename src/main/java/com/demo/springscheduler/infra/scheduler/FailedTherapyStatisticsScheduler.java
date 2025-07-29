@@ -28,7 +28,7 @@ public class FailedTherapyStatisticsScheduler {
 
         for (TherapyBatchLog batchLog : failedLogs) {
             Long userId = batchLog.getTherapyUserId();
-            log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 시작", userId);
+            log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", userId);
             YearMonth yearMonth = YearMonth.of(batchLog.getYear(), batchLog.getMonth());
             LocalDateTime start = batchLog.getStartTime();
             LocalDateTime end = batchLog.getEndTime();
@@ -38,10 +38,10 @@ public class FailedTherapyStatisticsScheduler {
             try {
                 therapyStatisticsUseCase.recoverTherapyStatistics(userId, yearMonth, start, end);
                 batchLog.markSuccess(LocalDateTime.now());
-                log.info("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 완료", userId);
+                log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", userId);
             } catch (Exception e) {
                 batchLog.markFail(LocalDateTime.now(), e.getMessage());
-                log.error("[Therapy Stats Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
+                log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
             } finally {
                 namedLockRepository.releaseLock("batch-lock");
             }
