@@ -42,34 +42,29 @@
 
 ```java
 @Scheduled(cron = "0 0 0 * * *")
-public void aggregateDaily(){
+public void aggregateDaily() {
+    List<Long> targetTherapyUserIds = therapyUserUseCase.findTargetTherapyUsers();
 
-        List<Long> targetTherapyUserIds=therapyUserUseCase.findTargetTherapyUsers();
+    // 특정 기간 설정 (오늘 ~ 달의 마지막 날)
+    LocalDateTime startDateTime = LocalDateTime.now();
+    YearMonth currentMonth = YearMonth.from(startDateTime);
+    LocalDate lastDayOfMonth = currentMonth.atEndOfMonth();
+    LocalDateTime endDateTime = lastDayOfMonth.atTime(LocalTime.MAX);
 
-        // 특정 기간 설정 (오늘 ~ 달의 마지막 날)
-
-        // 오늘
-        LocalDateTime startDateTime=LocalDateTime.now();
-
-        // 이번 달의 마지막 날
-        YearMonth currentMonth=YearMonth.from(startDateTime);
-        LocalDate lastDayOfMonth=currentMonth.atEndOfMonth();
-        LocalDateTime endDateTime=lastDayOfMonth.atTime(LocalTime.MAX);
-
-        for(Long therapyUserId:targetTherapyUserIds){
-        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작",therapyUserId);
+    for (Long therapyUserId : targetTherapyUserIds) {
+        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
         namedLockRepository.acquireLock("batch-lock");
-        try{
-        statsUseCase.aggregateTherapyStatics(therapyUserId,startDateTime,endDateTime);
-        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료",therapyUserId);
-        }catch(Exception e){
-        log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}",therapyUserId,e.getMessage(),e);
-        }finally{
-        namedLockRepository.releaseLock("batch-lock");
+        try {
+            statsUseCase.aggregateTherapyStatics(therapyUserId, startDateTime, endDateTime);
+            log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
+        } catch (Exception e) {
+            log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);
+        } finally {
+            namedLockRepository.releaseLock("batch-lock");
         }
-        }
+    }
+}
 
-        }
 ```
 
 ### 장애 발생 시에도 복구가 가능한 안정적인 배치 시스템
@@ -91,12 +86,16 @@ therapy_batch_log 테이블을 설계하였다.
 
 @PostMapping("/v1/therapy-statistics/recover")
 public ResponseEntity<Void> recoverTherapyStatistics(
-@RequestBody RecoverTherapyStatistics recoverTherapyStatistics){
-        statsUseCase.recoverTherapyStatistics(recoverTherapyStatistics.therapyUserId(),
-        recoverTherapyStatistics.yearMonth(),recoverTherapyStatistics.startDateTime(),
-        recoverTherapyStatistics.endDateTime());
-        return new ResponseEntity<>(HttpStatus.CREATED);
-        }
+        @RequestBody RecoverTherapyStatistics recoverTherapyStatistics) {
+    statsUseCase.recoverTherapyStatistics(
+            recoverTherapyStatistics.therapyUserId(),
+            recoverTherapyStatistics.yearMonth(),
+            recoverTherapyStatistics.startDateTime(),
+            recoverTherapyStatistics.endDateTime()
+    );
+    return new ResponseEntity<>(HttpStatus.CREATED);
+}
+
 
 ```
 
@@ -104,28 +103,30 @@ public ResponseEntity<Void> recoverTherapyStatistics(
 
 ```java
 @Scheduled(cron = "0 0 5 * * *") // 매일 새벽 5시에 실행
-public void recover(){
-        List<TherapyBatchLog> failedLogs=therapyBatchLogUseCase.findFailedLogs(Status.FAIL);
+public void recover() {
+    List<TherapyBatchLog> failedLogs = therapyBatchLogUseCase.findFailedLogs(Status.FAIL);
 
-        for(TherapyBatchLog batchLog:failedLogs){
-        Long userId=batchLog.getTherapyUserId();
-        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작",userId);
-        YearMonth yearMonth=YearMonth.of(batchLog.getYear(),batchLog.getMonth());
-        LocalDateTime start=batchLog.getStartTime();
-        LocalDateTime end=batchLog.getEndTime();
+    for (TherapyBatchLog batchLog : failedLogs) {
+        Long userId = batchLog.getTherapyUserId();
+        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", userId);
+
+        YearMonth yearMonth = YearMonth.of(batchLog.getYear(), batchLog.getMonth());
+        LocalDateTime start = batchLog.getStartTime();
+        LocalDateTime end = batchLog.getEndTime();
 
         namedLockRepository.acquireLock("batch-lock");
 
-        try{
-        therapyStatisticsUseCase.recoverTherapyStatistics(userId,yearMonth,start,end);
-        batchLog.markSuccess(LocalDateTime.now());
-        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료",userId);
-        }catch(Exception e){
-        batchLog.markFail(LocalDateTime.now(),e.getMessage());
-        log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}",userId,e.getMessage(),e);
-        }finally{
-        namedLockRepository.releaseLock("batch-lock");
+        try {
+            therapyStatisticsUseCase.recoverTherapyStatistics(userId, yearMonth, start, end);
+            batchLog.markSuccess(LocalDateTime.now());
+            log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", userId);
+        } catch (Exception e) {
+            batchLog.markFail(LocalDateTime.now(), e.getMessage());
+            log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
+        } finally {
+            namedLockRepository.releaseLock("batch-lock");
         }
-        }
-        }
+    }
+}
+
 ```
