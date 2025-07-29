@@ -1,5 +1,6 @@
 package com.demo.springscheduler.application;
 
+import com.demo.springscheduler.domain.log.Status;
 import com.demo.springscheduler.domain.log.TherapyBatchLog;
 import com.demo.springscheduler.domain.log.TherapyBatchLogJdbcRepository;
 import com.demo.springscheduler.domain.log.TherapyBatchLogRepository;
@@ -33,5 +34,11 @@ public class TherapyBatchLogUseCase {
         TherapyBatchLog therapyBatchLog = therapyBatchLogRepository.findTherapyBatchLogByTherapyUserIdAndYearAndMonth(
                 therapyUserId, year, month).orElseThrow(RuntimeException::new);
         therapyBatchLog.markFail(LocalDateTime.now(), errorMessage);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TherapyBatchLog> findFailedLogs(Status status) {
+        // 실패 로그를 재시도 가능 횟수도 제한둘 수 있다.
+        return therapyBatchLogRepository.findByStatus(status);
     }
 }
