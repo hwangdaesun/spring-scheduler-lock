@@ -33,7 +33,7 @@ public class FailedTherapyStatisticsScheduler {
             LocalDateTime start = batchLog.getStartTime();
             LocalDateTime end = batchLog.getEndTime();
 
-            namedLockRepository.acquireLock("batch-lock");
+            namedLockRepository.acquireLock(LockName.FAILED_THERAPY_STATISTICS_RECOVER.name());
 
             try {
                 therapyStatisticsUseCase.recoverTherapyStatistics(userId, yearMonth, start, end);
@@ -43,7 +43,7 @@ public class FailedTherapyStatisticsScheduler {
                 batchLog.markFail(LocalDateTime.now(), e.getMessage());
                 log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
             } finally {
-                namedLockRepository.releaseLock("batch-lock");
+                namedLockRepository.releaseLock(LockName.FAILED_THERAPY_STATISTICS_RECOVER.name());
             }
         }
     }

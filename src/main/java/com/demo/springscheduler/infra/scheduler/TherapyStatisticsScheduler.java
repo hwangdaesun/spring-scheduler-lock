@@ -48,7 +48,7 @@ public class TherapyStatisticsScheduler {
 
         for(Long therapyUserId : targetTherapyUserIds) {
             log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
-            namedLockRepository.acquireLock("batch-lock");
+            namedLockRepository.acquireLock(LockName.THERAPY_STATISTICS_AGGREGATE.name());
             try {
                 statsUseCase.aggregateTherapyStatics(
                         therapyUserId, yearMonth, startDateTime, endDateTime);
@@ -59,7 +59,7 @@ public class TherapyStatisticsScheduler {
                 therapyBatchLogUseCase.markFail(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue(),
                         e.getMessage());
             } finally {
-                namedLockRepository.releaseLock("batch-lock");
+                namedLockRepository.releaseLock(LockName.THERAPY_STATISTICS_AGGREGATE.name());
             }
         }
 
