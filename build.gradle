@@ -32,6 +32,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:6.10.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.10.0'
 }
 
 tasks.named('test') {
