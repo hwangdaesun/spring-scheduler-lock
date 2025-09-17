@@ -4,6 +4,7 @@ import com.demo.springscheduler.domain.therapy.TherapyItem;
 import com.demo.springscheduler.domain.therapy.TherapyPerform;
 import com.demo.springscheduler.domain.therapy.TherapyPlan;
 import com.demo.springscheduler.domain.user.TherapyUser;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,11 +39,13 @@ public class TherapyUserUseCase {
     }
 
     @Transactional
-    public void performTherapy(String email, Long therapyItemId, Double someData1, Double someData2) {
+    public void performTherapy(String email, Long therapyItemId, Double someData1, Double someData2,
+                               LocalDateTime performDateTime) {
         TherapyUser therapyUser = therapyUserReader.read(email);
         // 사용자 therapyPlan 인지 검증
         TherapyItem therapyItem = therapyItemReader.read(therapyItemId);
-        TherapyPerform therapyPerform = TherapyPerform.perform(therapyUser, therapyItem, someData1, someData2);
+        TherapyPerform therapyPerform = TherapyPerform.perform(therapyUser, therapyItem, someData1, someData2,
+                performDateTime);
         therapyPerformStore.store(therapyPerform);
     }
 }

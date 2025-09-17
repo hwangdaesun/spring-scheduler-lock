@@ -4,6 +4,7 @@ import com.demo.springscheduler.application.TherapyItemInitializer;
 import com.demo.springscheduler.application.TherapyItemReader;
 import com.demo.springscheduler.application.TherapyUserUseCase;
 import com.demo.springscheduler.domain.therapy.TherapyItem;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,7 +62,7 @@ public class SetupMockData {
                 double metricA = 50.0 + random.nextDouble() * 50;
                 double metricB = 100.0 + random.nextDouble() * 100;
 
-                therapyUserUseCase.performTherapy(email, item.getId(), metricA, metricB);
+                therapyUserUseCase.performTherapy(email, item.getId(), metricA, metricB, LocalDateTime.now());
             }
         }
     }

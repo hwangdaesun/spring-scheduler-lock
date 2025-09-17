@@ -60,11 +60,11 @@ public class TherapyPerform extends BaseEntity {
     }
 
     public static TherapyPerform perform(TherapyUser therapyUser, TherapyItem therapyItem, Double someData1,
-                                         Double someData2) {
+                                         Double someData2, LocalDateTime performDateTime) {
         return TherapyPerform.builder()
                 .therapyUser(therapyUser)
                 .therapyItem(therapyItem)
-                .performDateTime(LocalDateTime.now())
+                .performDateTime(performDateTime)
                 .someData1(someData1)
                 .someData2(someData2)
                 .build();
