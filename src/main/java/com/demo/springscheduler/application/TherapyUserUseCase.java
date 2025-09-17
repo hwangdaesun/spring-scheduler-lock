@@ -39,12 +39,16 @@ public class TherapyUserUseCase {
     }
 
     @Transactional
-    public void performTherapy(String email, Long therapyItemId, Double someData1, Double someData2,
+    public void performTherapy(String email, Long therapyItemId, Double someData1, Double someData2, Double someData3,
+                               Double someData4, Double someData5, Double someData6, Double someData7, Double someData8,
+                               Double someData9, Double someData10,
                                LocalDateTime performDateTime) {
         TherapyUser therapyUser = therapyUserReader.read(email);
         // 사용자 therapyPlan 인지 검증
         TherapyItem therapyItem = therapyItemReader.read(therapyItemId);
         TherapyPerform therapyPerform = TherapyPerform.perform(therapyUser, therapyItem, someData1, someData2,
+                someData3,
+                someData4, someData5, someData6, someData7, someData8, someData9, someData10,
                 performDateTime);
         therapyPerformStore.store(therapyPerform);
     }

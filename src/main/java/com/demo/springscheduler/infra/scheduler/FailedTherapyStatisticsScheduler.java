@@ -2,7 +2,6 @@ package com.demo.springscheduler.infra.scheduler;
 
 import com.demo.springscheduler.application.TherapyBatchLogUseCase;
 import com.demo.springscheduler.application.TherapyStatisticsUseCase;
-import com.demo.springscheduler.domain.NamedLockRepository;
 import com.demo.springscheduler.domain.log.Status;
 import com.demo.springscheduler.domain.log.TherapyBatchLog;
 import java.time.LocalDateTime;
@@ -10,6 +9,7 @@ import java.time.YearMonth;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,9 +20,11 @@ public class FailedTherapyStatisticsScheduler {
 
     private final TherapyBatchLogUseCase therapyBatchLogUseCase;
     private final TherapyStatisticsUseCase therapyStatisticsUseCase;
-    private final NamedLockRepository namedLockRepository;
+//    private final NamedLockRepository namedLockRepository;
 
-    @Scheduled(cron = "0 0 5 * * *") // 매일 새벽 5시에 실행
+    @Scheduled(cron = "0 0 5 * * *")
+    @SchedulerLock(name = SchedulerLockNames.FAILED_THERAPY_STATISTICS_RECOVER, lockAtLeastFor = "PT30S", lockAtMostFor = "PT120S")
+// 매일 새벽 5시에 실행
     public void recover() {
         List<TherapyBatchLog> failedLogs = therapyBatchLogUseCase.findFailedLogs(Status.FAIL);
 
@@ -33,18 +35,18 @@ public class FailedTherapyStatisticsScheduler {
             LocalDateTime start = batchLog.getStartTime();
             LocalDateTime end = batchLog.getEndTime();
 
-            namedLockRepository.acquireLock(LockName.FAILED_THERAPY_STATISTICS_RECOVER.name());
-
-            try {
+//            namedLockRepository.acquireLock(LockName.FAILED_THERAPY_STATISTICS_RECOVER.name());
+//
+//            try {
                 therapyStatisticsUseCase.recoverTherapyStatistics(userId, yearMonth, start, end);
                 batchLog.markSuccess(LocalDateTime.now());
                 log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", userId);
-            } catch (Exception e) {
-                batchLog.markFail(LocalDateTime.now(), e.getMessage());
-                log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
-            } finally {
-                namedLockRepository.releaseLock(LockName.FAILED_THERAPY_STATISTICS_RECOVER.name());
-            }
+//            } catch (Exception e) {
+//                batchLog.markFail(LocalDateTime.now(), e.getMessage());
+//                log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
+//            } finally {
+//                namedLockRepository.releaseLock(LockName.FAILED_THERAPY_STATISTICS_RECOVER.name());
+//            }
         }
     }
 
