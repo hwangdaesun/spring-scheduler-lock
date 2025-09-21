@@ -1,6 +1,6 @@
 package com.demo.springscheduler.infra.api;
 
-import com.demo.springscheduler.application.TherapyStatisticsUseCase;
+import com.demo.springscheduler.application.v1.TherapyStatisticsUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

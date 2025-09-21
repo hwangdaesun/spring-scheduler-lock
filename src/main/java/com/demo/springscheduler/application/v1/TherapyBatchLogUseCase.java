@@ -1,4 +1,4 @@
-package com.demo.springscheduler.application;
+package com.demo.springscheduler.application.v1;
 
 import com.demo.springscheduler.domain.log.Status;
 import com.demo.springscheduler.domain.log.TherapyBatchLog;

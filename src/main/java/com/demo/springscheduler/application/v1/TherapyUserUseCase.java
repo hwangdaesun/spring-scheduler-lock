@@ -1,5 +1,10 @@
-package com.demo.springscheduler.application;
+package com.demo.springscheduler.application.v1;
 
+import com.demo.springscheduler.application.TherapyItemReader;
+import com.demo.springscheduler.application.TherapyPerformStore;
+import com.demo.springscheduler.application.TherapyPlanStore;
+import com.demo.springscheduler.application.TherapyUserReader;
+import com.demo.springscheduler.application.TherapyUserStore;
 import com.demo.springscheduler.domain.therapy.TherapyItem;
 import com.demo.springscheduler.domain.therapy.TherapyPerform;
 import com.demo.springscheduler.domain.therapy.TherapyPlan;

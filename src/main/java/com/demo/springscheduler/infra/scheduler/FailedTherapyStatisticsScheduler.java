@@ -1,7 +1,7 @@
 package com.demo.springscheduler.infra.scheduler;
 
-import com.demo.springscheduler.application.TherapyBatchLogUseCase;
-import com.demo.springscheduler.application.TherapyStatisticsUseCase;
+import com.demo.springscheduler.application.v1.TherapyBatchLogUseCase;
+import com.demo.springscheduler.application.v1.TherapyStatisticsUseCase;
 import com.demo.springscheduler.domain.log.Status;
 import com.demo.springscheduler.domain.log.TherapyBatchLog;
 import java.time.LocalDateTime;
