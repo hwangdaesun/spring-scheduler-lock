@@ -3,7 +3,6 @@ package com.demo.springscheduler.infra.scheduler;
 import com.demo.springscheduler.application.TherapyBatchLogUseCase;
 import com.demo.springscheduler.application.TherapyStatisticsUseCase;
 import com.demo.springscheduler.application.TherapyUserUseCase;
-import com.demo.springscheduler.domain.log.TherapyBatchLog;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -43,9 +42,7 @@ public class TherapyStatisticsScheduler {
         LocalDateTime endDateTime = lastDayOfMonth.atTime(LocalTime.MAX);
         YearMonth yearMonth = YearMonth.from(startDateTime);
 
-        List<TherapyBatchLog> therapyBatchLogs = TherapyBatchLog.markProgress(
-                targetTherapyUserIds, yearMonth.getYear(), yearMonth.getMonthValue(), startDateTime, endDateTime);
-        therapyBatchLogUseCase.batchInsert(therapyBatchLogs);
+        therapyBatchLogUseCase.batchInsert(targetTherapyUserIds, yearMonth, startDateTime, endDateTime);
 
         for(Long therapyUserId : targetTherapyUserIds) {
             log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);

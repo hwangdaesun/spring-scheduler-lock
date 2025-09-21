@@ -5,6 +5,7 @@ import com.demo.springscheduler.domain.log.TherapyBatchLog;
 import com.demo.springscheduler.domain.log.TherapyBatchLogJdbcRepository;
 import com.demo.springscheduler.domain.log.TherapyBatchLogRepository;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,10 @@ public class TherapyBatchLogUseCase {
     private final TherapyBatchLogJdbcRepository therapyBatchLogJdbcRepository;
 
     @Transactional
-    public void batchInsert(List<TherapyBatchLog> therapyBatchLogs) {
+    public void batchInsert(List<Long> targetTherapyUserIds, YearMonth yearMonth, LocalDateTime startTime,
+                            LocalDateTime endTime) {
+        List<TherapyBatchLog> therapyBatchLogs = TherapyBatchLog.markProgress(
+                targetTherapyUserIds, yearMonth.getYear(), yearMonth.getMonthValue(), startTime, endTime);
         therapyBatchLogJdbcRepository.batchInsert(therapyBatchLogs, 100);
     }
 
