@@ -1,7 +1,6 @@
 package com.demo.springscheduler.application;
 
-import com.demo.springscheduler.domain.therapy.TherapyItem;
-import com.demo.springscheduler.domain.therapy.TherapyItemRepository;
+import com.demo.springscheduler.domain.therapy.TherapyItemJdbcRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -11,10 +10,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TherapyItemInitializer {
 
-    private final TherapyItemRepository therapyItemRepository;
+    private final TherapyItemJdbcRepository therapyItemJdbcRepository;
+
     @Transactional
-    public void setUp(List<String> titles) {
-        List<TherapyItem> therapyItems = TherapyItem.createAll(titles);
-        therapyItemRepository.saveAll(therapyItems);
+    public void setUp(List<String> titles, int batchSize) {
+        therapyItemJdbcRepository.saveAll(titles, batchSize);
     }
 }

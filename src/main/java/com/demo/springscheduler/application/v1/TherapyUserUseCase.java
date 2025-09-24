@@ -11,6 +11,9 @@ import com.demo.springscheduler.domain.therapy.TherapyPlan;
 import com.demo.springscheduler.domain.user.TherapyUser;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,11 @@ public class TherapyUserUseCase {
     public void createTherapyUser(String email) {
         TherapyUser therapyUser = TherapyUser.create(email);
         therapyUserStore.store(therapyUser);
+    }
+
+    @Transactional
+    public void createTherapyUsers(List<String> emails, int batchSize) {
+        therapyUserStore.storeAll(emails, batchSize);
     }
 
     @Transactional(readOnly = true)
@@ -56,5 +64,27 @@ public class TherapyUserUseCase {
                 someData4, someData5, someData6, someData7, someData8, someData9, someData10,
                 performDateTime);
         therapyPerformStore.store(therapyPerform);
+    }
+
+    @Transactional
+    public void performTherapies(String email, List<TherapyPerformCommand> command, int batchSize) {
+        TherapyUser therapyUser = therapyUserReader.read(email);
+        // Collect all item IDs and load items in one query
+        List<Long> itemIds = command.stream().map(TherapyPerformCommand::getTherapyItemId).toList();
+        Map<Long, TherapyItem> itemMap = therapyItemReader.readAll(itemIds)
+                .stream().collect(Collectors.toMap(TherapyItem::getId, Function.identity()));
+
+        List<TherapyPerform> performs = command.stream().map(req -> {
+            TherapyItem item = itemMap.get(req.getTherapyItemId());
+            return TherapyPerform.perform(
+                    therapyUser,
+                    item,
+                    req.getSomeData1(), req.getSomeData2(), req.getSomeData3(), req.getSomeData4(), req.getSomeData5(),
+                    req.getSomeData6(), req.getSomeData7(), req.getSomeData8(), req.getSomeData9(), req.getSomeData10(),
+                    req.getPerformDateTime()
+            );
+        }).toList();
+
+        therapyPerformStore.storeAll(performs, batchSize);
     }
 }
