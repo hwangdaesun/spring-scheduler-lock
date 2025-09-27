@@ -28,7 +28,7 @@ public class TherapyStatisticsScheduler {
     @Scheduled(cron = "0 0 0 * * *")
     @SchedulerLock(name = SchedulerLockNames.THERAPY_STATISTICS_AGGREGATE, lockAtLeastFor = "PT30S", lockAtMostFor = "PT120S")
     public void aggregateDaily() {
-
+        log.info("[Therapy Statistics Batch] 시작");
         List<Long> targetTherapyUserIds = therapyUserUseCase.findTargetTherapyUsers();
 
         // 특정 기간 설정 (오늘 ~ 달의 마지막 날)
@@ -61,5 +61,6 @@ public class TherapyStatisticsScheduler {
 //            }
         }
 
+        log.info("[Therapy Statistics Batch] 끝");
     }
 }
