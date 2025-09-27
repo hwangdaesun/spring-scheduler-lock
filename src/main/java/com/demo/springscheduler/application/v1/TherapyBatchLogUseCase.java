@@ -19,9 +19,9 @@ public class TherapyBatchLogUseCase {
     private final TherapyBatchLogJdbcRepository therapyBatchLogJdbcRepository;
 
     @Transactional
-    public void batchInsert(List<Long> targetTherapyUserIds, YearMonth yearMonth, LocalDateTime startTime,
-                            LocalDateTime endTime) {
-        List<TherapyBatchLog> therapyBatchLogs = TherapyBatchLog.markProgress(
+    public void markAllProgress(List<Long> targetTherapyUserIds, YearMonth yearMonth, LocalDateTime startTime,
+                                LocalDateTime endTime) {
+        List<TherapyBatchLog> therapyBatchLogs = TherapyBatchLog.markAllProgress(
                 targetTherapyUserIds, yearMonth.getYear(), yearMonth.getMonthValue(), startTime, endTime);
         therapyBatchLogJdbcRepository.batchInsert(therapyBatchLogs, 100);
     }
