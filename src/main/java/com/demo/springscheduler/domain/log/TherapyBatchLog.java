@@ -64,7 +64,7 @@ public class TherapyBatchLog {
         this.updatedAt = updatedAt;
     }
 
-    public static List<TherapyBatchLog> markProgress(
+    public static List<TherapyBatchLog> markAllProgress(
             List<Long> therapyUserIds, Integer year, Integer month, LocalDateTime startTime, LocalDateTime endTime) {
         return therapyUserIds.stream()
                 .map(therapyUserId -> TherapyBatchLog.builder().therapyUserId(therapyUserId).year(year).month(month)
