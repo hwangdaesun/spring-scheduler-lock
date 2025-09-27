@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TherapyStatisticsScheduler {
 
-    private final TherapyStatisticsUseCase statsUseCase;
+    private final TherapyStatisticsUseCase therapyStatisticsUseCase;
     private final TherapyUserUseCase therapyUserUseCase;
     private final TherapyBatchLogUseCase therapyBatchLogUseCase;
 //    private final NamedLockRepository namedLockRepository;
@@ -48,7 +48,7 @@ public class TherapyStatisticsScheduler {
             log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
 //            namedLockRepository.acquireLock(LockName.THERAPY_STATISTICS_AGGREGATE.name());
 //            try {
-                statsUseCase.aggregateTherapyStatics(
+            therapyStatisticsUseCase.aggregateTherapyStatics(
                         therapyUserId, yearMonth, startDateTime, endDateTime);
                 therapyBatchLogUseCase.markSuccess(therapyUserId, yearMonth.getYear(), yearMonth.getMonthValue());
                 log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
