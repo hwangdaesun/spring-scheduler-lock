@@ -36,9 +36,9 @@
 이를 위해 스케줄러 전체에 트랜잭션을 적용하는 대신, 개별 집계 메서드 내부에만 트랜잭션을 적용하여 부분 실패가 전체에 영향을 주지 않도록 구성하였다.
 
 그리고, 분산 환경에서 동일한 사용자의 통계를 동시에 계산하려 할 경우, therapyUserId + year + month 복합 Unique 제약 조건을 위반하는 충돌이 발생할 수 있다.
-이를 방지하기 위해 트랜잭션이 시작되기 전에 Named Lock을 선점하여, 하나의 인스턴스만 해당 사용자에 대한 집계를 수행하도록 제어하고 있다.
+이를 방지하기 위해 트랜잭션이 시작되기 전에 ShedLock을 선점하여, 하나의 인스턴스만 해당 사용자에 대한 집계를 수행하도록 제어하고 있다.
 
-마지막으로, 집계 메서드 외부에서 Named Lock을 휙득하여 트랜잭션이 시작되기 전에 Named Lock을 획득함으로써, Repeatable Read 격리 수준에서 발생할 수 있는 데이터 정합성 문제를 방지했다.
+마지막으로, 집계 메서드 외부에서 ShedLock을 휙득하여 트랜잭션이 시작되기 전에 ShedLock을 획득함으로써, Repeatable Read 격리 수준에서 발생할 수 있는 데이터 정합성 문제를 방지했다.
 
 ```java
 
@@ -52,18 +52,33 @@ public void aggregateDaily() {
     LocalDate lastDayOfMonth = currentMonth.atEndOfMonth();
     LocalDateTime endDateTime = lastDayOfMonth.atTime(LocalTime.MAX);
 
-    for (Long therapyUserId : targetTherapyUserIds) {
-        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", therapyUserId);
-        namedLockRepository.acquireLock("batch-lock");
+    final int batchSize = 1000;
+
+    for (int i = 0; i < targetTherapyUserIds.size(); i += batchSize) {
+        List<Long> batch = targetTherapyUserIds.subList(i, Math.min(i + batchSize, targetTherapyUserIds.size()));
+        log.info("[Therapy Statistics Batch] 배치 처리 시작: index {} ~ {}, size={}",
+                i, Math.min(i + batchSize, targetTherapyUserIds.size()) - 1, batch.size());
         try {
-            statsUseCase.aggregateTherapyStatics(therapyUserId, startDateTime, endDateTime);
-            log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", therapyUserId);
+            // 배치 로그 선 등록
+            therapyBatchLogUseCase.markAllProgress(batch, yearMonth, startDateTime, endDateTime);
+            // 통계 집계 배치 실행
+            therapyStatisticsUseCase.aggregateAllTherapyStatics(batch, yearMonth, startDateTime, endDateTime);
+            // 배치 성공 기록
+            therapyBatchLogUseCase.markAllSuccess(batch, yearMonth.getYear(), yearMonth.getMonthValue());
+            log.info("[Therapy Statistics Batch] 배치 처리 완료: size={}", batch.size());
         } catch (Exception e) {
-            log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", therapyUserId, e.getMessage(), e);
-        } finally {
-            namedLockRepository.releaseLock("batch-lock");
+            log.error("[Therapy Statistics Batch] 배치 처리 실패: size={}, error={}", batch.size(), e.getMessage(), e);
+            try {
+                therapyBatchLogUseCase.markAllFail(batch, yearMonth.getYear(), yearMonth.getMonthValue(),
+                        e.getMessage());
+            } catch (Exception inner) {
+                log.warn("[Therapy Statistics Batch] 실패 로그 기록 실패(일괄): size={}, error={}", batch.size(),
+                        inner.getMessage(), inner);
+            }
         }
     }
+
+    log.info("[Therapy Statistics Batch] 끝");
 }
 
 ```
@@ -80,58 +95,6 @@ therapy_batch_log 테이블을 설계하였다.
 - FAIL : 예외 발생 시 실패 상태로 변경하고 오류 메시지 저장
 
 이 구조를 통해 배치 실패 시에도 수동 복구 API로 재처리가 가능하며, 실패 항목은 별도 스케줄러에 의해 자동 재시도할 수 있다.
-
-수동 복구 API)
-
-```java
-
-@PostMapping("/v1/therapy-statistics/recover")
-public ResponseEntity<Void> recoverTherapyStatistics(
-        @RequestBody RecoverTherapyStatistics recoverTherapyStatistics) {
-    statsUseCase.recoverTherapyStatistics(
-            recoverTherapyStatistics.therapyUserId(),
-            recoverTherapyStatistics.yearMonth(),
-            recoverTherapyStatistics.startDateTime(),
-            recoverTherapyStatistics.endDateTime()
-    );
-    return new ResponseEntity<>(HttpStatus.CREATED);
-}
-
-
-```
-
-실패 항목 재처리 스케줄러)
-
-```java
-
-@Scheduled(cron = "0 0 5 * * *") // 매일 새벽 5시에 실행
-public void recover() {
-    List<TherapyBatchLog> failedLogs = therapyBatchLogUseCase.findFailedLogs(Status.FAIL);
-
-    for (TherapyBatchLog batchLog : failedLogs) {
-        Long userId = batchLog.getTherapyUserId();
-        log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 시작", userId);
-
-        YearMonth yearMonth = YearMonth.of(batchLog.getYear(), batchLog.getMonth());
-        LocalDateTime start = batchLog.getStartTime();
-        LocalDateTime end = batchLog.getEndTime();
-
-        namedLockRepository.acquireLock("batch-lock");
-
-        try {
-            therapyStatisticsUseCase.recoverTherapyStatistics(userId, yearMonth, start, end);
-            batchLog.markSuccess(LocalDateTime.now());
-            log.info("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 완료", userId);
-        } catch (Exception e) {
-            batchLog.markFail(LocalDateTime.now(), e.getMessage());
-            log.error("[Therapy Statistics Batch] 사용자 ID {} - 통계 집계 실패: {}", userId, e.getMessage(), e);
-        } finally {
-            namedLockRepository.releaseLock("batch-lock");
-        }
-    }
-}
-
-```
 
 ### 성능 고려 사항
 
