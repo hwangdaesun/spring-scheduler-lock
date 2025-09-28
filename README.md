@@ -20,10 +20,10 @@
    ↓
 5. 사용자별 통계 집계 수행
 
-   - 사용자별 치료 수행 데이터를 조회
-   - 통계 지표 계산
-   - 결과를 therapy_statistics 테이블에 저장하거나 갱신
-   - 집계 상태를 therapy_batch_log 테이블에 성공(SUCCESS), 진행 중(IN_PROGRESS), 실패(FAIL) 로 기록
+    - 사용자별 치료 수행 데이터를 조회
+    - 통계 지표 계산
+    - 결과를 therapy_statistics 테이블에 저장하거나 갱신
+    - 집계 상태를 therapy_batch_log 테이블에 성공(SUCCESS), 진행 중(IN_PROGRESS), 실패(FAIL) 로 기록
 
    ↓
 6. 통계 데이터 제공 (API에서 사용)
@@ -41,6 +41,7 @@
 마지막으로, 집계 메서드 외부에서 Named Lock을 휙득하여 트랜잭션이 시작되기 전에 Named Lock을 획득함으로써, Repeatable Read 격리 수준에서 발생할 수 있는 데이터 정합성 문제를 방지했다.
 
 ```java
+
 @Scheduled(cron = "0 0 0 * * *")
 public void aggregateDaily() {
     List<Long> targetTherapyUserIds = therapyUserUseCase.findTargetTherapyUsers();
@@ -102,6 +103,7 @@ public ResponseEntity<Void> recoverTherapyStatistics(
 실패 항목 재처리 스케줄러)
 
 ```java
+
 @Scheduled(cron = "0 0 5 * * *") // 매일 새벽 5시에 실행
 public void recover() {
     List<TherapyBatchLog> failedLogs = therapyBatchLogUseCase.findFailedLogs(Status.FAIL);
@@ -130,3 +132,14 @@ public void recover() {
 }
 
 ```
+
+### 성능 고려 사항
+
+|  시나리오   | User 수 | Perform 수 |  배치 Size  |  시작 시각   |  종료 시각   | 처리 시간 (hh:mm:ss) | 처리 시간 (초) | 성능 개선율 (vs No Batch) |
+|:-------:|:------:|:---------:|:---------:|:--------:|:--------:|:----------------:|:---------:|:--------------------:|
+| **A-1** | 10,000 |  200,000  |   **1**   | 21:00:00 | 21:01:46 |     00:01:46     |  **106**  |          -           |
+| **A-2** | 10,000 |  200,000  |    100    | 21:11:00 | 21:11:30 |     00:00:30     |    30     |       71.7% 감소       |
+| **A-3** | 10,000 |  200,000  | **1,000** | 21:09:00 | 21:09:29 |     00:00:29     |  **29**   |     **72.6% 감소**     |
+
+- ‘1만 유저 환경 배치 성능 분석표’ 결과(A-3: batch size 1,000에서 29초, No Batch 대비 72.6% 감소)를 근거로 스케줄러에서 batch_size=1,000을 적용했으며, 주요 쓰기
+  경로에 JDBC batch 기반의 bulk insert/update(therapy_batch_log, therapy_statistics, therapy_perform)를 도입해 처리량을 개선했다.
