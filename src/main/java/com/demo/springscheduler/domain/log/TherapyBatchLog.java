@@ -72,6 +72,13 @@ public class TherapyBatchLog {
                         .updatedAt(LocalDateTime.now()).build()).toList();
     }
 
+    public static TherapyBatchLog markProgress(Long therapyUserId, Integer year, Integer month, LocalDateTime startTime,
+                                               LocalDateTime endTime) {
+        return TherapyBatchLog.builder().therapyUserId(therapyUserId).year(year).month(month)
+                .startTime(startTime).endTime(endTime).status(Status.IN_PROGRESS).createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now()).build();
+    }
+
     public void markSuccess(LocalDateTime endTime) {
         this.status = Status.SUCCESS;
         this.endTime = endTime;

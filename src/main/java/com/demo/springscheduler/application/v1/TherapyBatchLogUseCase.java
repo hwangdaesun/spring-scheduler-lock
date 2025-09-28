@@ -23,7 +23,23 @@ public class TherapyBatchLogUseCase {
                                 LocalDateTime endTime) {
         List<TherapyBatchLog> therapyBatchLogs = TherapyBatchLog.markAllProgress(
                 targetTherapyUserIds, yearMonth.getYear(), yearMonth.getMonthValue(), startTime, endTime);
-        therapyBatchLogJdbcRepository.batchInsert(therapyBatchLogs, 100);
+        therapyBatchLogJdbcRepository.batchInsert(therapyBatchLogs);
+    }
+
+    @Transactional
+    public void markProgress(Long therapyUserId, Integer year, Integer month, LocalDateTime startTime,
+                             LocalDateTime endTime) {
+        TherapyBatchLog therapyBatchLog = TherapyBatchLog.markProgress(therapyUserId, year, month, startTime, endTime);
+        therapyBatchLogRepository.save(therapyBatchLog);
+    }
+
+    @Transactional
+    public void markAllSuccess(List<Long> therapyUserIds, Integer year, Integer month) {
+        if (therapyUserIds == null || therapyUserIds.isEmpty()) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        therapyBatchLogJdbcRepository.batchMarkSuccess(therapyUserIds, year, month, now);
     }
 
     @Transactional
@@ -31,6 +47,15 @@ public class TherapyBatchLogUseCase {
         TherapyBatchLog therapyBatchLog = therapyBatchLogRepository.findTherapyBatchLogByTherapyUserIdAndYearAndMonth(
                 therapyUserId, year, month).orElseThrow(RuntimeException::new);
         therapyBatchLog.markSuccess(LocalDateTime.now());
+    }
+
+    @Transactional
+    public void markAllFail(List<Long> therapyUserIds, Integer year, Integer month, String errorMessage) {
+        if (therapyUserIds == null || therapyUserIds.isEmpty()) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        therapyBatchLogJdbcRepository.batchMarkFail(therapyUserIds, year, month, now, errorMessage);
     }
 
     @Transactional
