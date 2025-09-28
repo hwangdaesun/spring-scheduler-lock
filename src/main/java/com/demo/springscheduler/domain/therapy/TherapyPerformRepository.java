@@ -10,4 +10,10 @@ public interface TherapyPerformRepository extends JpaRepository<TherapyPerform, 
     List<TherapyPerform> findTherapyPerformsByTherapyUserAndPerformDateTimeBetween(TherapyUser therapyUser,
                                                                                    LocalDateTime startDateTime,
                                                                                    LocalDateTime endDateTime);
+
+    List<TherapyPerform> findByTherapyUserInAndPerformDateTimeBetween(
+            List<TherapyUser> therapyUsers,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    );
 }

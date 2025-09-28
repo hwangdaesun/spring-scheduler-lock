@@ -15,8 +15,18 @@ public class TherapyPerformReader {
     private final TherapyPerformRepository therapyPerformRepository;
 
     @Transactional(readOnly = true)
-    public List<TherapyPerform> read(TherapyUser therapyUser, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    public List<TherapyPerform> readBetweenDateTime(TherapyUser therapyUser, LocalDateTime startDateTime,
+                                                    LocalDateTime endDateTime) {
         return therapyPerformRepository.findTherapyPerformsByTherapyUserAndPerformDateTimeBetween(therapyUser,
                 startDateTime, endDateTime);
     }
+
+    @Transactional
+    public List<TherapyPerform> readInTherapyUsersAndBetweenDateTime(List<TherapyUser> therapyUsers,
+                                                                     LocalDateTime startDateTime,
+                                                                     LocalDateTime endDateTime) {
+        return therapyPerformRepository.findByTherapyUserInAndPerformDateTimeBetween(therapyUsers, startDateTime,
+                endDateTime);
+    }
+
 }
