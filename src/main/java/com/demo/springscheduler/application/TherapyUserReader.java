@@ -28,6 +28,11 @@ public class TherapyUserReader {
     }
 
     @Transactional(readOnly = true)
+    public List<TherapyUser> readAllByIds(List<Long> ids) {
+        return therapyUserRepository.findAllById(ids);
+    }
+
+    @Transactional(readOnly = true)
     public List<TherapyUser> readAll() {
         return therapyUserRepository.findAll();
     }
